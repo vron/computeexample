@@ -1,0 +1,26 @@
+
+#version 450
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D img;
+
+void main() {
+  vec4 pixel = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+  ivec2 pixel_coords;
+  pixel_coords.x = int(gl_GlobalInvocationID.x);
+  pixel_coords.y = int(gl_GlobalInvocationID.y);
+  pixel_coords *= 8;
+  pixel_coords.x += int(gl_LocalInvocationID.x);
+  pixel_coords.y += int(gl_LocalInvocationID.y);
+  int x;
+  x = pixel_coords.x;
+  int i;
+  for(i=0; i < 100; i++) {
+    x = x*(x+1);
+  }
+  if(pixel_coords.x%2 + pixel_coords.y%2 == 0) {
+    pixel = vec4(float(x), 1.0f, 1.0f, 1.0f);
+  } 
+  imageStore(img, pixel_coords, pixel);
+}
