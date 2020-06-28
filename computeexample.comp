@@ -13,14 +13,20 @@ void main() {
   pixel_coords *= 8;
   pixel_coords.x += int(gl_LocalInvocationID.x);
   pixel_coords.y += int(gl_LocalInvocationID.y);
-  int x;
+  int x, y, z, w;
   x = pixel_coords.x;
+  y = pixel_coords.y;
+  z = (pixel_coords.x)-5;
+  w = (pixel_coords.y)-5;
   int i;
   for(i=0; i < 100; i++) {
     x = x*(x+1);
+    y = y*(y+1);
+    z = z*(z+1);
+    w = w*(w+1);
   }
   if(pixel_coords.x%2 + pixel_coords.y%2 == 0) {
-    pixel = vec4(float(x), 1.0f, 1.0f, 1.0f);
+    pixel = vec4(float(x), float(y), float(z), float(w));
   } 
   imageStore(img, pixel_coords, pixel);
 }

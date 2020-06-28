@@ -14,12 +14,12 @@ import (
 )
 
 type kernel struct {
-	k    unsafe.Pointer
+	k unsafe.Pointer
 	dead bool
 }
 
 type Data struct {
-	ImgData  *float32
+	ImgData *float32
 	ImgWidth uint
 }
 
@@ -30,9 +30,9 @@ type Data struct {
 func New(numCPU int) (k *kernel, err error) {
 	k = &kernel{}
 	if numCPU <= 0 {
-		numCPU = runtime.NumCPU() + 2
+		numCPU = runtime.NumCPU()+2
 	}
-	k.k = C.cpt_new_kernel(C.int(numCPU))
+	k.k = C.cpt_new_kernel(C.int(numCPU));
 	if k.k == nil {
 		return nil, errors.New("failed to create kernel structure")
 	}
@@ -50,7 +50,7 @@ func (k *kernel) Dispatch(bind Data, numx, numy, numz int) error {
 		panic("cannot use a kernel where Free() has been called")
 	}
 	cbind := C.kernel_data{
-		imgData:  (*C.float)(bind.ImgData),
+		imgData: (*C.float)(bind.ImgData),
 		imgWidth: (C.uint)(bind.ImgWidth),
 	}
 	errno := C.cpt_dispatch_kernel(k.k, cbind, C.int(numx), C.int(numy), C.int(numz))
@@ -63,12 +63,13 @@ func (k *kernel) Free() {
 	freeKernel(k)
 }
 
+
 func freeKernel(k *kernel) {
 	if k.dead {
 		return
 	}
 	k.dead = true
-	C.cpt_free_kernel(k.k)
+	C.cpt_free_kernel(k.k);
 }
 
 var dispatchErrors = map[int]string{
@@ -79,7 +80,7 @@ func mapErrno(errno int) error {
 	if errno == 0 {
 		return nil
 	}
-	v, ok := dispatchErrors[errno]
+	v, ok :=dispatchErrors[errno]
 	if !ok {
 		v = "unknown error code"
 	}

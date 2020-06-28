@@ -112,15 +112,21 @@ func cpuImplementation(nop int, arr []float32) {
 					px := gx*8 + lx
 					py := gy*8 + ly
 					x := int32(px)
+					y := int32(py)
+					z := int32(px) - 5
+					w := int32(py) - 5
 					for i := 0; i < 100; i++ {
 						x = x * (x + 1)
+						y = y * (y + 1)
+						z = z * (z + 1)
+						w = w * (w + 1)
 					}
 					index := py*4*(nop*8) + px*4
 					if px%2+py%2 == 0 {
 						arr[index] = float32(x)
-						arr[index+1] = 1
-						arr[index+2] = 1
-						arr[index+3] = 1
+						arr[index+1] = float32(y)
+						arr[index+2] = float32(z)
+						arr[index+3] = float32(w)
 					} else {
 						arr[index] = 0
 						arr[index+1] = 0
