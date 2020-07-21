@@ -1,15 +1,19 @@
 package computeexample
 
 import (
+	"reflect"
 	"runtime"
 	"testing"
+	"unsafe"
 )
 
 func createData(nop int) (Data, []float32) {
 	img := make([]float32, nop*nop*8*8*4)
 	d := Data{
-		ImgData:  &(img[0]),
-		ImgWidth: uint(nop * 8),
+		Img: Image2Drgba32f{
+			Data:  floatToByte(img),
+			Width: int32(nop * 8),
+		},
 	}
 	return d, img
 }
@@ -27,7 +31,7 @@ func TestSame(t *testing.T) {
 		t.Error(e)
 		t.FailNow()
 	}
-	e = s.Dispatch(d1, nop, nop, 1)
+	e = s.Dispatch(d1, nop/8, nop/8, 1)
 	if e != nil {
 		t.Error(e)
 		t.FailNow()
@@ -67,7 +71,7 @@ func BenchmarkShader128x128(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		s.Dispatch(d1, nop, nop, 1)
+		s.Dispatch(d1, nop/8, nop/8, 1)
 	}
 	b.StopTimer()
 
@@ -96,7 +100,23 @@ func BenchmarkShader2048x2048(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		s.Dispatch(d1, nop, nop, 1)
+		s.Dispatch(d1, nop/8, nop/8, 1)
+	}
+	b.StopTimer()
+
+	s.Free()
+	runtime.KeepAlive(i1)
+}
+
+func BenchmarkShader2048x2048Parallel(b *testing.B) {
+	nop := 2048 / 8
+	d1, i1 := createData(nop)
+
+	s, _ := New(-1)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		s.Dispatch(d1, nop/8, nop/8, 1)
 	}
 	b.StopTimer()
 
@@ -137,4 +157,12 @@ func cpuImplementation(nop int, arr []float32) {
 			}
 		}
 	}
+}
+
+func floatToByte(raw []float32) []byte {
+	header := *(*reflect.SliceHeader)(unsafe.Pointer(&raw))
+	header.Len *= 4
+	header.Cap *= 4
+	data := *(*[]byte)(unsafe.Pointer(&header))
+	return data
 }

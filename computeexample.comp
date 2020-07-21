@@ -5,28 +5,26 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image2D img;
 
 void main() {
-  vec4 pixel = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-
-  ivec2 pixel_coords;
-  pixel_coords.x = int(gl_GlobalInvocationID.x);
-  pixel_coords.y = int(gl_GlobalInvocationID.y);
-  pixel_coords *= 8;
-  pixel_coords.x += int(gl_LocalInvocationID.x);
-  pixel_coords.y += int(gl_LocalInvocationID.y);
-  int x, y, z, w;
-  x = pixel_coords.x;
-  y = pixel_coords.y;
-  z = (pixel_coords.x)-5;
-  w = (pixel_coords.y)-5;
-  int i;
-  for(i=0; i < 100; i++) {
-    x = x*(x+1);
-    y = y*(y+1);
-    z = z*(z+1);
-    w = w*(w+1);
+  ivec2 coord = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y)*8;
+  for(int xi=0; xi < 8; xi++) {
+    for(int yi=0; yi < 8; yi++) {
+      vec4 pixel = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+      ivec2 pixel_coords = coord + ivec2(xi, yi);
+      int x, y, z, w;
+      x = pixel_coords.x;
+      y = pixel_coords.y;
+      z = (pixel_coords.x)-5;
+      w = (pixel_coords.y)-5;
+      for(int i=0; i < 100; i++) {
+        x = x*(x+1);
+        y = y*(y+1);
+        z = z*(z+1);
+        w = w*(w+1);
+      }
+      if(pixel_coords.x%2 + pixel_coords.y%2 == 0) {
+        pixel = vec4(float(x), float(y), float(z), float(w));
+      } 
+      imageStore(img, pixel_coords, pixel);
+    }
   }
-  if(pixel_coords.x%2 + pixel_coords.y%2 == 0) {
-    pixel = vec4(float(x), float(y), float(z), float(w));
-  } 
-  imageStore(img, pixel_coords, pixel);
 }
