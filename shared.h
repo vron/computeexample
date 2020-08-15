@@ -15,8 +15,9 @@
 #define exported_func
 #endif
 
-#include "errno.h"
-#include "stdint.h"
+#include <errno.h>
+#include <stdint.h>
+#include <stdalign.h>
 
 /*
   cpt_error_t represents an error as reported from cpt_dispatch_kernel. The 
@@ -33,10 +34,41 @@ struct cpt_error_t {
   char* msg;
 };
 
-typedef struct {
-  void* data;
-  int32_t width;
+typedef struct {  // size = 8, align = 8
+  alignas(8) float  x; // offset = 0 
+  float             y; // offset = 4 
+} cpt_vec2;
+
+typedef struct {  // size = 16, align = 16
+  alignas(16) float  x; // offset = 0  
+  float              y; // offset = 4  
+  float              z; // offset = 8  
+  float              w; // offset = 12 
+} cpt_vec4;
+
+typedef struct {  // size = 64, align = 16
+  alignas(16) cpt_vec4 column0; // offset = 0  
+  cpt_vec4             column1; // offset = 16 
+  cpt_vec4             column2; // offset = 32 
+  cpt_vec4             column3; // offset = 48 
+} cpt_mat4;
+
+typedef struct {  // size = 32, align = 8
+  alignas(8) float             (*data);    // offset = 0 
+  char              _pad1[20];                         
+  int32_t          width;      // offset = 28          
 } cpt_image2Drgba32f;
+
+typedef struct {  // size = 32, align = 8
+  alignas(8) int32_t flag;      // offset =  0           
+  char                _pad1[4];                          
+  cpt_vec2                      vertices[3]; // offset = 8 
+} cpt_triangle;
+
+typedef struct {  // size = 320, align = 16
+  alignas(16) cpt_triangle    ts[4][2];   // offset = 0 
+  cpt_mat4                 m; // offset = 256         
+} cpt_example;
 
 /*
   cpt_data consists of all the input/output required by the compute kernel. All
@@ -54,9 +86,11 @@ typedef struct {
   If there is insufficient memory available to create a new kernel 0 is
   returned. For all other possible errors a kernel reference is returned and
   the next call to cpt_dispatch_kernel will return the error information.
-  cpt_new_kernel is safe for concurrent use from multiple threads.
+  cpt_new_kernel is safe for concurrent use from multiple threads. The stack size
+  that each shader invocation should have access to can be specified in the last
+  argument. If negative a default value of 16kB will be used.
 */
-exported_func void *cpt_new_kernel(int32_t num_t);
+exported_func void *cpt_new_kernel(int32_t num_t, int32_t stack_size);
 
 /*
   cpt_dispatch_kernel issues a calculation of the compute shader using x, y, z
